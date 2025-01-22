@@ -56,6 +56,9 @@ public class LinkedList {
 		}
 		Node currentNode = first ;
 		for (int i = 0; i < index; i++) {
+			if (currentNode == null){
+				throw new IllegalArgumentException("Invalid list structure") ;
+			}
 			currentNode = currentNode.next;
 		}
 		return currentNode;
@@ -152,7 +155,7 @@ public class LinkedList {
 	public MemoryBlock getBlock(int index) {
 		if (index < 0 || index >= size) {
 			throw new IllegalArgumentException(
-					"index must be between 0 and (size - 1)") ;
+					"index must be between 0 and size") ;
 		}
 		else {
 			Node node = getNode(index) ;
@@ -187,25 +190,35 @@ public class LinkedList {
 	 *        the node that will be removed from this list
 	 */
 	public void remove(Node node) {
-		if (node == null || first == null) return ;
-
-		Node prevNode = null ;
-		Node curNode = first ;
-
-		while (curNode != null && !curNode.equals(node)) {
-			prevNode = curNode ;
-			curNode = curNode.next ;
+		if (node == null) {
+			throw new NullPointerException("Cannot remove a null node");
 		}
-
-		if (curNode.equals(node)) {
-			if (curNode == first){
-				first = first.next ;
-			} else {
-			prevNode.next = curNode.next ;
+		if (this.first == null) {
+			return;
+		}
+		Node currentNode = this.first, prevNode = null;
+		while (currentNode != null && !currentNode.equals(node)) {
+			prevNode = currentNode;
+			currentNode = currentNode.next;
+		}
+		if (currentNode == null) {
+			return;
+		}
+		if (prevNode == null) {
+			this.first = this.first.next;
+			if (this.first == null) {
+				this.last = null;
 			}
-			size -- ;
+		} else {
+			prevNode.next = currentNode.next;
+			if (prevNode.next == null) {
+				this.last = prevNode;
+			}
 		}
+		size--;
 	}
+	
+
 
 	/**
 	 * Removes from this list the node which is located at the given index.
@@ -215,7 +228,7 @@ public class LinkedList {
 	 *         if index is negative or greater than or equal to size
 	 */
 	public void remove(int index) {
-		//// Write your code here
+		remove(this.getNode(index));
 	}
 
 	/**
@@ -226,7 +239,13 @@ public class LinkedList {
 	 *         if the given memory block is not in this list
 	 */
 	public void remove(MemoryBlock block) {
-		//// Write your code here
+		int index = indexOf(block) ;
+		if (index == -1 || block == null) {
+			throw new IllegalArgumentException(
+					"index must be between 0 and size") ;
+		} else {
+			this.remove(index) ;
+		}
 	}	
 
 	/**
