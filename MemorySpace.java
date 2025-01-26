@@ -58,7 +58,21 @@ public class MemorySpace {
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
 	public int malloc(int length) {		
-		//// Replace the following statement with your code
+		MemoryBlock block = new MemoryBlock(0, length);
+		Node node = freeList.getFirst();
+		while (node != null) {
+			if(node.block.length >= length) {
+				block.baseAddress = node.block.baseAddress;
+				node.block.baseAddress += length;
+				node.block.length -= length;
+				if (node.block.length == 0) {
+					freeList.remove(node.block);
+				}
+				allocatedList.addLast(block);
+				return block.baseAddress;
+			}
+			node = node.next;
+		}
 		return -1;
 	}
 
@@ -71,7 +85,18 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		//// Write your code here
+		if(allocatedList.getSize() == 0) {
+			throw new IllegalArgumentException("index must be between 0 and size");
+		}
+		Node list = allocatedList.getFirst();
+		while (list != null) {
+			if(list.block.baseAddress == address) {
+				freeList.addLast(list.block);
+				allocatedList.remove(list.block);
+				return;
+			}
+			list = list.next;
+		}
 	}
 	
 	/**
@@ -79,16 +104,56 @@ public class MemorySpace {
 	 * for debugging purposes.
 	 */
 	public String toString() {
-		return freeList.toString() + "\n" + allocatedList.toString();		
+		String retString = "";
+		if (freeList.getSize() != 0) {
+			retString += freeList.toString() + " ";
+		}
+		retString += "\n";
+		if (allocatedList.getSize() != 0) {
+			retString += allocatedList.toString();
+		}
+		return retString + " ";
 	}
-	
 	/**
 	 * Performs defragmantation of this memory space.
 	 * Normally, called by malloc, when it fails to find a memory block of the requested size.
 	 * In this implementation Malloc does not call defrag.
 	 */
 	public void defrag() {
-		/// TODO: Implement defrag test
-		//// Write your code here
+		Node[] orderedNodes = new Node[freeList.getSize()];
+		for (int i = 0; i < orderedNodes.length; i++) {
+			orderedNodes[i] = freeList.getNode(i);
+		}
+        for (int i = 0; i < orderedNodes.length - 1; i++) {
+            for (int j = 0; j < orderedNodes.length - i - 1; j++) {
+                if (orderedNodes[j].block.baseAddress > orderedNodes[j + 1].block.baseAddress) {
+                    Node temp = orderedNodes[j];
+                    orderedNodes[j] = orderedNodes[j + 1];
+                    orderedNodes[j + 1] = temp;
+                }
+            }
+        }
+		Node [] newOrderedNodes;
+		for ( int i = 0; i < orderedNodes.length - 1; i++) {
+			if (orderedNodes[i] != null && orderedNodes[i].block.baseAddress + orderedNodes[i].block.length == orderedNodes[i+1].block.baseAddress) {
+				freeList.remove(orderedNodes[i+1]);
+				Node foundNode = freeList.getFirst();
+				while (foundNode.block.baseAddress != orderedNodes[i].block.baseAddress) {
+					foundNode = foundNode.next;
+				}
+				foundNode.block.length += orderedNodes[i+1].block.length;
+				orderedNodes[i+1] = null;
+				i--;
+				newOrderedNodes = new Node[orderedNodes.length -1];
+				int j = 0;
+				for (int u = 0; u < orderedNodes.length; u++) {
+					if (orderedNodes[u] != null) {
+						newOrderedNodes[j] = orderedNodes[u];
+						j++;
+					}
+				}
+				orderedNodes = newOrderedNodes;
+			}
+		}
 	}
 }
